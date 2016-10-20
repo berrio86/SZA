@@ -35,3 +35,4 @@ int bidali_zerrenda(int s);
 unsigned long toki_librea();
 void sig_chld(int signal);
 int ez_ezkutua(const struct dirent *entry);
+//char[10] stringSortu();

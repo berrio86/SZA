@@ -16,11 +16,14 @@
 
 int main()
 {
-	int sock, n, erabiltzaile, pasahitza, komando, error;
+	int sock, n, erabiltzaile, pasahitza, komando, error, x_ard, y_ard;
 	struct sockaddr_in zerb_helb, bez_helb, bez_helb2;
 	socklen_t helb_tam;
 	char buf[MAX_BUF];
 	char * sep;
+
+	x_ard = 90;
+	y_ard = 90;
 	
 	// Sortu socketa.
 	if((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
@@ -137,7 +140,7 @@ int main()
 					{
 						printf("Pasahitza ez da zuzena.\n");
 						if(write(sock,"ERROR$2",7)<0)
-						{
+							{
 							perror("Errorea datuak bidaltzean\n");
 							exit(1);
 						}
@@ -146,13 +149,18 @@ int main()
 					}
 					break;
 			/*case COM_POSITION:
-				if(n>6 || egoera != ST_MAIN)	// Egiaztatu esperotako egoeran jaso dela komandoa eta ez dela parametrorik jaso.
+				if(egoera != ST_MAIN)	// Egiaztatu esperotako egoeran jaso dela komandoa eta ez dela parametrorik jaso.
 				{
 					ustegabekoa(s);
 					continue;
 				}
-				if(bidali_zerrenda(s) < 0)
-					write(s,"ER4\r\n",5);
+				
+				if(write(sock,"OK$", 10)<0)
+				{
+					perror("Errorea datuak bidaltzean\n");
+					exit(1);
+				}
+				
 				break;
 			case COM_RESET:
 				if(egoera != ST_MAIN)		// Egiaztatu esperotako egoeran jaso dela komandoa.
@@ -311,15 +319,23 @@ int main()
 			case COM_PHOTO:
 				break;
 			case COM_PHOTOP:
-				break;
+				break;*/
 			case COM_LOGOUT:
-				if(n > 6)	// Egiaztatu ez dela parametrorik jaso.
+				if(n > 7)	// Egiaztatu ez dela parametrorik jaso.
 				{
-					ustegabekoa(s);
+					ustegabekoa(sock);
 					continue;
 				}
-				write(s,"OK\r\n",4);
-				return;*/
+				if((egoera==ST_INIT)||(egoera==ST_AUTH))
+				{
+					printf("Ez zaude logeatuta. Sartu erabiltzailea:\n");
+					write(sock,"ERROR$4",7);
+					egoera = ST_INIT;
+				}else{
+					printf("Log out-a egoki burutu da. Erabiltzailea sartu:\n");
+					write(sock,"OK",2);
+					egoera = ST_INIT;
+				}
 			}
 		}while((n=read(sock, buf, MAX_BUF)) > 0);
 			
@@ -413,7 +429,7 @@ int bilatu_substring(char *string, char **string_zerr)
 */
 void ustegabekoa(int s)
 {
-	write(s,"ER1\r\n",5);
+	write(s,"ERROR$8",7);
 	if(egoera == ST_AUTH)
 	{
 		egoera = ST_INIT;
@@ -423,6 +439,11 @@ void ustegabekoa(int s)
 		exit(1);
 	}
 }
+
+/*char[10] stringSortu()
+{
+	
+}*/
 
 
 
