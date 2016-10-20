@@ -23,7 +23,7 @@
 
 char * KOMANDOAK[] = {"USER","PASS","POSITION","RESET","UP","DOWN","LEFT","RIGHT","PHOTO","PHOTOP", "LOGOUT",NULL};
 char * erab_zer[] = {"kamera","kamera2",NULL};
-char * pass_zer[] = {"123456","654321"};
+char * pass_zer[] = {"123456","654321", NULL};
 int egoera;
 
 void saioa(int s);

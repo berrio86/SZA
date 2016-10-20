@@ -16,7 +16,7 @@
 
 int main()
 {
-	int sock, n, erabiltzaile, komando, error;
+	int sock, n, erabiltzaile, pasahitza, komando, error;
 	struct sockaddr_in zerb_helb, bez_helb, bez_helb2;
 	socklen_t helb_tam;
 	char buf[MAX_BUF];
@@ -93,10 +93,10 @@ int main()
 					{
 							
 						//if(sendto(sock, "ERROR$1", 7, 0, (struct sockaddr *) &bez_helb, helb_tam) < 0)
-						printf("Ez dago erabiltzaile hori gure listan.");
+						printf("Ez dago erabiltzaile hori gure listan.\n");
 						if(write(sock,"ERROR$1",7)<0)
 						{
-							perror("Errorea datuak bidaltzean");
+							perror("Errorea datuak bidaltzean\n");
 							exit(1);
 						}
 					}
@@ -104,10 +104,10 @@ int main()
 					{
 						
 						//if(sendto(sock, "OK", 2, 0, (struct sockaddr *) &bez_helb, helb_tam) < 0)
-						printf("Erabiltzaile hori gure listan dago.");
+						printf("Erabiltzaile hori gure listan dago.\n");
 						if(write(sock,"OK",2)<0)
 						{
-							perror("Errorea datuak bidaltzean");
+							perror("Errorea datuak bidaltzean\n");
 							exit(1);
 						}
 						egoera = ST_AUTH;
@@ -121,25 +121,28 @@ int main()
 					}
 					buf[n-1] = 0;	// EOL ezabatu.
 					// Pasahitza zuzena dela egiaztatu.
-					if(!strcmp(pass_zer[erabiltzaile], buf+5))
+					//if(!strcmp(pass_zer[erabiltzaile], buf+5))
+					pasahitza = bilatu_string(buf+5, pass_zer);
+					if(pasahitza==erabiltzaile)
 					{
-						printf("Pasahitza ez da zuzena.");
-						if(write(sock,"ERROR$2",7)<0)
+						printf("Pasahitza zuzena da.\n");
+						if(write(sock,"OK",2)<0)
 						{
-							perror("Errorea datuak bidaltzean");
+							perror("Errorea datuak bidaltzean\n");
 							exit(1);
 						}
 						egoera = ST_MAIN;
 					}
 					else
 					{
-						printf("Pasahitza ez da zuzena.");
-						if(write(sock,"OK",2)<0)
+						printf("Pasahitza ez da zuzena.\n");
+						if(write(sock,"ERROR$2",7)<0)
 						{
-							perror("Errorea datuak bidaltzean");
+							perror("Errorea datuak bidaltzean\n");
 							exit(1);
 						}
 						egoera = ST_INIT;
+						
 					}
 					break;
 			/*case COM_POSITION:
