@@ -35,10 +35,6 @@ int main()
 	zerb_helb.sin_addr.s_addr = htonl(INADDR_ANY);
 	zerb_helb.sin_port = htons(PORT);
 
-	//bezeroa
-	memset(&bez_helb, 0, sizeof(bez_helb));
-	bez_helb.sin_family = AF_INET;
-	helb_tam = sizeof(bez_helb);	
 
 	// Esleitu helbidea socketari.	
 	if(bind(sock, (struct sockaddr *) &zerb_helb, sizeof(zerb_helb)) < 0)
@@ -46,91 +42,106 @@ int main()
 		perror("Errorea socketari helbide bat esleitzean");
 		exit(1);
 	}
+
+	//prozesu umeak hiltzeko modu egokian. Aurrerago begiratu, konkurrentea egiterakoan
+	//signal(SIGCHLD, SIG_IGN);
 	
 	// Zehaztu uneko egoera bezala hasierako egoera.
 	egoera = ST_INIT;
 	
 	while(1)
 	{
-
+		helb_tam = sizeof(bez_helb);
 		if((n=recvfrom(sock, buf, MAX_BUF, 0, (struct sockaddr *) &bez_helb, &helb_tam)) < 0)
 		{
 			perror("Errorea datuak jasotzean");
 			exit(1);
 		}
 
-		// Irakurri bezeroak bidalitako mezua. 
-		//if((n=readline(s,buf,MAX_BUF)) <= 0) //guk "mezua" aldagaian daukagu erabiltzaileak bidalitakoa.
-		//	return;
-		
-		// Aztertu jasotako komandoa ezaguna den ala ez.
-		if((komando=bilatu_substring(buf,KOMANDOAK)) < 0)
+		//dena ondo joan bada jarraitu, bestela whiletik atera eta prozesua egoki amaitu
+		if(n==0)
+			continue; 
+
+		//bezeroarekin konektatu
+		if(connect(sock, (struct sockaddr *) &bez_helb, helb_tam) < 0)
 		{
-			ustegabekoa(sock);
-			continue;
+			perror("Errorea bezeroarekin konektatzean");
+			exit(1);
 		}
-		
-		// Jasotako komandoaren arabera egin beharrekoa egin.
-		switch(komando)
+
+		do
 		{
-			case COM_USER:
-				if(egoera != ST_INIT)		// Egiaztatu esperotako egoeran jaso dela komandoa.
-				{
-					ustegabekoa(sock);
-					continue;
-				}
-				buf[n-1] = 0;	// Lerro bukaera, edo "End Of Line" (EOL), ezabatzen du.
-				// Baliozko erabiltzaile bat den egiaztatu.
-				if((erabiltzaile = bilatu_string(buf+5, erab_zer)) < 0)
-				{
-					//write(s,"ERROR$1",7);
-					if(sendto(sock, "ERROR$1", 7, 0, (struct sockaddr *) &bez_helb, helb_tam) < 0)
+			// Aztertu jasotako komandoa ezaguna den ala ez.
+			if((komando=bilatu_substring(buf,KOMANDOAK)) < 0)
+			{
+				ustegabekoa(sock);
+				continue;
+			}
+		
+			// Jasotako komandoaren arabera egin beharrekoa egin.
+			switch(komando)
+			{
+				case COM_USER:
+					if(egoera != ST_INIT)		// Egiaztatu esperotako egoeran jaso dela komandoa.
 					{
-						perror("Errorea datuak bidaltzean");
-						exit(1);
+						ustegabekoa(sock);
+						continue;
 					}
-				}
-				else
-				{
-					//write(s,"OK",2);
-					if(sendto(sock, "OK", 2, 0, (struct sockaddr *) &bez_helb, helb_tam) < 0)
+					buf[n-1] = 0;	// Lerro bukaera, edo "End Of Line" (EOL), ezabatzen du.
+					// Baliozko erabiltzaile bat den egiaztatu.
+					if((erabiltzaile = bilatu_string(buf+5, erab_zer)) < 0)
 					{
-						perror("Errorea datuak bidaltzean");
-						exit(1);
-					}else{
-						//konparaketa egiteko datuak gorde
-						bez_helb2=bez_helb;	
+							
+						//if(sendto(sock, "ERROR$1", 7, 0, (struct sockaddr *) &bez_helb, helb_tam) < 0)
+						printf("Ez dago erabiltzaile hori gure listan.");
+						if(write(sock,"ERROR$1",7)<0)
+						{
+							perror("Errorea datuak bidaltzean");
+							exit(1);
+						}
 					}
-					egoera = ST_AUTH;
-				}
-				break;
-			case COM_PASS:
-				//konprobatu helbide berdinetik idazten ari direla
-				if((bez_helb.sin_addr.s_addr=bez_helb2.sin_addr.s_addr))
-				{
+					else
+					{
+						
+						//if(sendto(sock, "OK", 2, 0, (struct sockaddr *) &bez_helb, helb_tam) < 0)
+						printf("Erabiltzaile hori gure listan dago.");
+						if(write(sock,"OK",2)<0)
+						{
+							perror("Errorea datuak bidaltzean");
+							exit(1);
+						}
+						egoera = ST_AUTH;
+					}
+					break;
+				case COM_PASS:
 					if(egoera != ST_AUTH)		// Egiaztatu esperotako egoeran jaso dela komandoa.
 					{
 						ustegabekoa(sock);
 						continue;
 					}
-					buf[n-2] = 0;	// EOL ezabatu.
+					buf[n-1] = 0;	// EOL ezabatu.
 					// Pasahitza zuzena dela egiaztatu.
-					// zergatik == 0??
-					if(!strcmp(pass_zer[erabiltzaile], buf+4))
+					if(!strcmp(pass_zer[erabiltzaile], buf+5))
 					{
-						//write(s,"OK",4);
+						printf("Pasahitza ez da zuzena.");
+						if(write(sock,"ERROR$2",7)<0)
+						{
+							perror("Errorea datuak bidaltzean");
+							exit(1);
+						}
 						egoera = ST_MAIN;
 					}
 					else
 					{
-						//write(s,"ER3\r\n",5);
+						printf("Pasahitza ez da zuzena.");
+						if(write(sock,"OK",2)<0)
+						{
+							perror("Errorea datuak bidaltzean");
+							exit(1);
+						}
 						egoera = ST_INIT;
 					}
-				}else{
-					perror("Ez zaude helbide berdinetik lanean, saiatu aurrerago.");
-					exit(1);
-				}
-				break;
+					break;
 			/*case COM_POSITION:
 				if(n>6 || egoera != ST_MAIN)	// Egiaztatu esperotako egoeran jaso dela komandoa eta ez dela parametrorik jaso.
 				{
@@ -306,7 +317,17 @@ int main()
 				}
 				write(s,"OK\r\n",4);
 				return;*/
+			}
+		}while((n=read(sock, buf, MAX_BUF)) > 0);
+			
+		close(sock);
+		if(n < 0)
+		{
+			perror("Errorea mezua jasotzean");
+			exit(1);
 		}
+		exit(0);
+		
 	}
 }
 
