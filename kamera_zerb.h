@@ -20,7 +20,6 @@
 #define COM_LOGOUT	10
 
 
-
 char * KOMANDOAK[] = {"USER","PASS","POSITION","RESET","UP","DOWN","LEFT","RIGHT","PHOTO","PHOTOP", "LOGOUT",NULL};
 char * erab_zer[] = {"kamera","kamera2",NULL};
 char * pass_zer[] = {"123456","654321", NULL};
@@ -35,4 +34,4 @@ int bidali_zerrenda(int s);
 unsigned long toki_librea();
 void sig_chld(int signal);
 int ez_ezkutua(const struct dirent *entry);
-//char[10] stringSortu();
+void stringSortu(int x, int y, char* pos);

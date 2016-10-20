@@ -17,10 +17,12 @@
 int main()
 {
 	int sock, n, erabiltzaile, pasahitza, komando, error, x_ard, y_ard;
-	struct sockaddr_in zerb_helb, bez_helb, bez_helb2;
+	struct sockaddr_in zerb_helb, bez_helb;
 	socklen_t helb_tam;
 	char buf[MAX_BUF];
+	char posizioa[11];	
 	char * sep;
+	
 
 	x_ard = 90;
 	y_ard = 90;
@@ -45,6 +47,7 @@ int main()
 		perror("Errorea socketari helbide bat esleitzean");
 		exit(1);
 	}
+	
 
 	//prozesu umeak hiltzeko modu egokian. Aurrerago begiratu, konkurrentea egiterakoan
 	//signal(SIGCHLD, SIG_IGN);
@@ -148,14 +151,17 @@ int main()
 						
 					}
 					break;
-			/*case COM_POSITION:
+			case COM_POSITION:
 				if(egoera != ST_MAIN)	// Egiaztatu esperotako egoeran jaso dela komandoa eta ez dela parametrorik jaso.
 				{
-					ustegabekoa(s);
+					ustegabekoa(sock);
 					continue;
 				}
-				
-				if(write(sock,"OK$", 10)<0)
+				stringSortu(x_ard,y_ard,posizioa);
+				printf("Posizioa honakoa da:.\n");
+				printf("x ardatza: %d\n", x_ard);
+				printf("y ardatza: %d\n", y_ard);
+				if(write(sock, posizioa, 10)<0)
 				{
 					perror("Errorea datuak bidaltzean\n");
 					exit(1);
@@ -165,23 +171,26 @@ int main()
 			case COM_RESET:
 				if(egoera != ST_MAIN)		// Egiaztatu esperotako egoeran jaso dela komandoa.
 				{
-					ustegabekoa(s);
+					ustegabekoa(sock);
 					continue;
 				}
-				buf[n-2] = 0; // EOL ezabatu.
-				sprintf(file_path,"%s/%s",FILES_PATH,buf+4);		// Fitxategiak dauden karpeta eta fitxategiaren izena kateatu.
-				if(stat(file_path, &file_info) < 0)							// Lortu fitxategiari buruzko informazioa.
+				buf[n-1] = 0; // EOL ezabatu.
+
+				x_ard = 90;
+				y_ard = 90;
+
+				printf("Kamera hasierako posiziora bueltatu da. \n");
+				printf("x ardatza = %d \n",x_ard);
+				printf("y ardatza = %d \n",y_ard);
+				
+				if(write(sock,"OK$090?090", 10)<0)
 				{
-					write(s,"ER5\r\n",5);
+					perror("Errorea datuak bidaltzean\n");
+					exit(1);
 				}
-				else
-				{
-					sprintf(buf,"OK%ld\r\n", file_info.st_size);
-					write(s, buf, strlen(buf));
-					egoera = ST_DOWN;
-				}
+				
 				break;
-			case COM_UP:
+			/*case COM_UP:
 				if(n > 6 || egoera != ST_DOWN)		// Egiaztatu esperotako egoeran jaso dela komandoa eta ez dela parametrorik jaso.
 				{
 					ustegabekoa(s);
@@ -440,10 +449,10 @@ void ustegabekoa(int s)
 	}
 }
 
-/*char[10] stringSortu()
+void stringSortu(int x, int y, char* pos)
 {
-	
-}*/
+	sprintf(pos,"OK$%03d?%03d",x,y);
+}
 
 
 
