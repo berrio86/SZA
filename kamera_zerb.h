@@ -35,3 +35,4 @@ unsigned long toki_librea();
 void sig_chld(int signal);
 int ez_ezkutua(const struct dirent *entry);
 void stringSortu(int x, int y, char* pos);
+int ardatzaFrogatu(int y);

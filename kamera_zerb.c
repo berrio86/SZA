@@ -20,7 +20,8 @@ int main()
 	struct sockaddr_in zerb_helb, bez_helb;
 	socklen_t helb_tam;
 	char buf[MAX_BUF];
-	char posizioa[11];	
+	char posizioa[11];
+	char mugimendua[4];	
 	char * sep;
 	
 
@@ -195,16 +196,26 @@ int main()
 				case COM_UP:
 					if(egoera != ST_MAIN) // Egiaztatu esperotako egoeran jaso dela komandoa eta ez dela parametrorik jaso.
 					{
-						ustegabekoa(s);
+						ustegabekoa(sock);
 						continue;
 					}
 					buf[n-1] = 0; // EOL ezabatu.
-
 					
-					y_ard = y_ard + 0;
+					
+
+					sprintf(mugimendua,"%s",buf+3);
+
+					printf("mugimendua honakoa da: %s gradu goruntz\n", mugimendua);
+					
+					//int y = atoi(mugimendua);
+					y_ard = y_ard + atoi(mugimendua);
+
+					y_ard=ardatzaFrogatu(y_ard);
 					
 					stringSortu(x_ard,y_ard,posizioa);
-					printf("Kamera uneko posizioa honakoa da: x ardatza %d eta y ardatza %d \n", x_ard, y_ard);
+					printf("Kameraren posizioa honakoa da: \n");
+					printf("x ardatza = %d \n",x_ard);
+					printf("y ardatza = %d \n",y_ard);
 				
 					if(write(sock,posizioa, 10)<0)
 					{
@@ -215,16 +226,25 @@ int main()
 				case COM_DOWN:
 					if(egoera != ST_MAIN) // Egiaztatu esperotako egoeran jaso dela komandoa eta ez dela parametrorik jaso.
 					{
-						ustegabekoa(s);
+						ustegabekoa(sock);
 						continue;
 					}
 					buf[n-1] = 0; // EOL ezabatu.
 
 					
-					y_ard = y_ard - 0;
+					
+					sprintf(mugimendua,"%s",buf+5);
+					printf("mugimendua honakoa da: %s gradu behera\n", mugimendua);
+					
+					//int y = atoi(mugimendua);
+					y_ard = y_ard - atoi(mugimendua);
+					y_ard=ardatzaFrogatu(y_ard);
+					
 					
 					stringSortu(x_ard,y_ard,posizioa);
-					printf("Kamera uneko posizioa honakoa da: x ardatza %d eta y ardatza %d \n", x_ard, y_ard);
+					printf("Kameraren posizioa honakoa da: \n");
+					printf("x ardatza = %d \n",x_ard);
+					printf("y ardatza = %d \n",y_ard);
 				
 					if(write(sock,posizioa, 10)<0)
 					{
@@ -235,16 +255,22 @@ int main()
 				case COM_LEFT:
 					if(egoera != ST_MAIN) // Egiaztatu esperotako egoeran jaso dela komandoa eta ez dela parametrorik jaso.
 					{
-						ustegabekoa(s);
+						ustegabekoa(sock);
 						continue;
 					}
 					buf[n-1] = 0; // EOL ezabatu.
 
+					sprintf(mugimendua,"%s",buf+5);
+					printf("mugimendua honakoa da: %s  gradu ezkerretara\n", mugimendua);
 					
-					x_ard = x_ard - 0;
+					//int x = atoi(mugimendua);
+					x_ard = x_ard - atoi(mugimendua);
+					x_ard=ardatzaFrogatu(x_ard);
 					
 					stringSortu(x_ard,y_ard,posizioa);
-					printf("Kamera uneko posizioa honakoa da: x ardatza %d eta y ardatza %d \n", x_ard, y_ard);
+					printf("Kameraren posizioa honakoa da: \n");
+					printf("x ardatza = %d \n",x_ard);
+					printf("y ardatza = %d \n",y_ard);
 				
 					if(write(sock,posizioa, 10)<0)
 					{
@@ -255,16 +281,23 @@ int main()
 				case COM_RIGHT:
 					if(egoera != ST_MAIN) // Egiaztatu esperotako egoeran jaso dela komandoa eta ez dela parametrorik jaso.
 					{
-						ustegabekoa(s);
+						ustegabekoa(sock);
 						continue;
 					}
 					buf[n-1] = 0; // EOL ezabatu.
 
 					
-					x_ard = x_ard + 0;
+					sprintf(mugimendua,"%s",buf+6);
+					printf("mugimendua honakoa da: %s  gradu eskubitara\n", mugimendua);
+					
+					//int x = atoi(mugimendua);
+					x_ard = x_ard + atoi(mugimendua);
+					x_ard=ardatzaFrogatu(x_ard);
 					
 					stringSortu(x_ard,y_ard,posizioa);
-					printf("Kamera uneko posizioa honakoa da: x ardatza %d eta y ardatza %d \n", x_ard, y_ard);
+					printf("Kameraren posizioa honakoa da: \n");
+					printf("x ardatza = %d \n",x_ard);
+					printf("y ardatza = %d \n",y_ard);
 				
 					if(write(sock,posizioa, 10)<0)
 					{
@@ -306,46 +339,7 @@ int main()
 	}
 }
 
-/*
-* Telneteko lerro jauzi estandar bat ("\r\n") aurkitu arte datuak irakurtzen ditu stream batetik.
-* Erraztasunagatik lerro jauzia irakurketa bakoitzeko azken bi bytetan soilik bilatzen da.
-* Dena ondo joanez gero irakurritako karaktere kopurua itzuliko du.
-* Fluxua amaituz gero ezer irakurri gabe 0 itzuliko du.
-* Zerbait irakurri ondoren fluxua amaituz gero ("\r\n" aurkitu gabe) -1 itzuliko du.
-* 'tam' parametroan adierazitako karaktere kopurua irakurriz gero "\r\n" aurkitu gabe -2 itzuliko du.
-* Beste edozein error gertatu ezkero -3 itzuliko du.
-*/
-int readline(int stream, char *buf, int tam)
-{
-	/*
-		Kontuz! Inplementazio hau sinplea da, baina ez da batere eraginkorra.
-	*/
-	char c;
-	int guztira=0;
-	int cr = 0;
 
-	while(guztira<tam)
-	{
-		int n = read(stream, &c, 1);
-		if(n == 0)
-		{
-			if(guztira == 0)
-				return 0;
-			else
-				return -1;
-		}
-		if(n<0)
-			return -3;
-		buf[guztira++]=c;
-		if(cr && c=='\n')
-			return guztira;
-		else if(c=='\r')
-			cr = 1;
-		else
-			cr = 0;
-	}
-	return -2;
-}
 
 /*
 * 'string' parametroko karaktere katea bilatzen du 'string_zerr' parametroan. 'string_zerr' bektoreko azkeneko elementua NULL izan behar da.
@@ -400,6 +394,18 @@ void stringSortu(int x, int y, char* pos)
 {
 	sprintf(pos,"OK$%03d?%03d",x,y);
 }
+
+int ardatzaFrogatu(int y)
+{
+	if (y < 0)
+		y = 0;
+		
+	if (y > 180)
+		y = 180;	
+	
+	return y;
+}
+
 
 
 
