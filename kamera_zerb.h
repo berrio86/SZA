@@ -17,11 +17,11 @@
 #define COM_LEFT	6
 #define COM_RIGHT	7
 #define COM_PHOTO	8
-#define COM_PHOTOP	9
+#define COM_FOTOP	9
 #define COM_LOGOUT	10
 
 
-char * KOMANDOAK[] = {"USER","PASS","POSITION","RESET","UP","DOWN","LEFT","RIGHT","PHOTO","PHOTOP", "LOGOUT",NULL};
+char * KOMANDOAK[] = {"USER","PASS","POSITION","RESET","UP","DOWN","LEFT","RIGHT","PHOTO","FOTOP", "LOGOUT",NULL};
 char * erab_zer[] = {"kamera","kamera2",NULL};
 char * pass_zer[] = {"123456","654321", NULL};
 int egoera;

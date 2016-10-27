@@ -25,6 +25,7 @@ int main()
 	char argazki_izena[9];	
 	char * sep;
 	struct stat file_info;
+	FILE *fp;
 
 	
 
@@ -359,16 +360,47 @@ int main()
 							exit(1);
 						}
 						egoera=ST_PHOTO;
-						printf("EGOERA: %d \n", egoera);
 					}
 					break;
-				case COM_PHOTOP:
+				case COM_FOTOP:
 					if(egoera != ST_PHOTO) // Egiaztatu esperotako egoeran jaso dela komandoa eta ez dela parametrorik jaso.
 					{
 						ustegabekoa(sock);
 						continue;
 					}
-					egoera = ST_MAIN;
+					//printf("Fotop barruan zaude\n");
+					if((fp=fopen(file_path,"r")) == NULL)
+					{
+						ustegabekoa(sock);
+					}
+					else
+					{
+					//Hau zergatik??
+					// Fitxategiaren lehenengo zatia irakurri eta errore bat gertatu bada bidali errore kodea.
+					if((n=fread(buf,1,MAX_BUF,fp))<MAX_BUF && ferror(fp) != 0)
+					{
+						ustegabekoa(sock);
+					}
+					else
+					{
+						//write(sock,"OK",4);
+						// Bidali fitxategiaren zatiak.
+						do
+						{
+							write(sock,buf,MAX_BUF);
+						} while((n=fread(buf,1,MAX_BUF,fp)) == MAX_BUF);
+						
+						if(ferror(fp) != 0)
+						{
+							close(sock);
+							//hau zergatik??
+							return;
+						}
+						else if(n>0)
+							write(sock,buf,n);	// Bidali azkeneko zatia.
+					}
+					fclose(fp);
+					}
 					break;
 				case COM_LOGOUT:
 					if(n > 7)	// Egiaztatu ez dela parametrorik jaso.
