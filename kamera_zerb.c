@@ -119,6 +119,7 @@ int main()
 						egoera = ST_AUTH;
 					}
 					break;
+
 				case COM_PASS:
 					if(egoera != ST_AUTH)		// Egiaztatu esperotako egoeran jaso dela komandoa.
 					{
@@ -151,181 +152,127 @@ int main()
 						
 					}
 					break;
-			case COM_POSITION:
-				if(egoera != ST_MAIN)	// Egiaztatu esperotako egoeran jaso dela komandoa eta ez dela parametrorik jaso.
-				{
-					ustegabekoa(sock);
-					continue;
-				}
-				stringSortu(x_ard,y_ard,posizioa);
-				printf("Posizioa honakoa da:.\n");
-				printf("x ardatza: %d\n", x_ard);
-				printf("y ardatza: %d\n", y_ard);
-				if(write(sock, posizioa, 10)<0)
-				{
-					perror("Errorea datuak bidaltzean\n");
-					exit(1);
-				}
-				
-				break;
-			case COM_RESET:
-				if(egoera != ST_MAIN)		// Egiaztatu esperotako egoeran jaso dela komandoa.
-				{
-					ustegabekoa(sock);
-					continue;
-				}
-				buf[n-1] = 0; // EOL ezabatu.
 
-				x_ard = 90;
-				y_ard = 90;
+				case COM_POSITION:
+					if(egoera != ST_MAIN)	// Egiaztatu esperotako egoeran jaso dela komandoa eta ez dela parametrorik jaso.
+					{
+						ustegabekoa(sock);
+						continue;
+					}
+					stringSortu(x_ard,y_ard,posizioa);
+					printf("Posizioa honakoa da:.\n");
+					printf("x ardatza: %d\n", x_ard);
+					printf("y ardatza: %d\n", y_ard);
+					if(write(sock, posizioa, 10)<0)
+					{
+						perror("Errorea datuak bidaltzean\n");
+						exit(1);
+					}
+				
+					break;
+				case COM_RESET:
+					if(egoera != ST_MAIN)		// Egiaztatu esperotako egoeran jaso dela komandoa.
+					{
+						ustegabekoa(sock);
+						continue;
+					}
+					buf[n-1] = 0; // EOL ezabatu.
 
-				printf("Kamera hasierako posiziora bueltatu da. \n");
-				printf("x ardatza = %d \n",x_ard);
-				printf("y ardatza = %d \n",y_ard);
+					x_ard = 90;
+					y_ard = 90;
+
+					printf("Kamera hasierako posiziora bueltatu da. \n");
+					printf("x ardatza = %d \n",x_ard);
+					printf("y ardatza = %d \n",y_ard);
 				
-				if(write(sock,"OK$090?090", 10)<0)
-				{
-					perror("Errorea datuak bidaltzean\n");
-					exit(1);
-				}
+					if(write(sock,"OK$090?090", 10)<0)
+					{
+						perror("Errorea datuak bidaltzean\n");
+						exit(1);
+					}
 				
-				break;
-			/*case COM_UP:
-				if(n > 6 || egoera != ST_DOWN)		// Egiaztatu esperotako egoeran jaso dela komandoa eta ez dela parametrorik jaso.
-				{
-					ustegabekoa(s);
-					continue;
-				}
-				egoera = ST_MAIN;
-				// Fitxategia ireki.
-				if((fp=fopen(file_path,"r")) == NULL)
-				{
-					write(s,"ER6\r\n",5);
-				}
-				else
-				{
-					// Fitxategiaren lehenengo zatia irakurri eta errore bat gertatu bada bidali errore kodea.
-					if((n=fread(buf,1,MAX_BUF,fp))<MAX_BUF && ferror(fp) != 0)
+					break;
+				case COM_UP:
+					if(egoera != ST_MAIN) // Egiaztatu esperotako egoeran jaso dela komandoa eta ez dela parametrorik jaso.
 					{
-						write(s,"ER6\r\n",5);
+						ustegabekoa(s);
+						continue;
 					}
-					else
-					{
-						write(s,"OK\r\n",4);
-						// Bidali fitxategiaren zatiak.
-						do
-						{
-							write(s,buf,n);
-						} while((n=fread(buf,1,MAX_BUF,fp)) == MAX_BUF);
-						if(ferror(fp) != 0)
-						{
-							close(s);
-							return;
-						}
-						else if(n>0)
-							write(s,buf,n);	// Bidali azkeneko zatia.
-					}
-					fclose(fp);
-				}
-				break;
-			case COM_DOWN:
-				if(egoera != ST_MAIN)		// Egiaztatu esperotako egoeran jaso dela komandoa.
-				{
-					ustegabekoa(s);
-					continue;
-				}
-				// Erabiltzaile anonimoak ez dauka ekintza honetarako baimenik.
-				if(erabiltzaile==0)
-				{
-					write(s,"ER7\r\n",5);
-					continue;
-				}
+					buf[n-1] = 0; // EOL ezabatu.
+
+					
+					y_ard = y_ard + 0;
+					
+					stringSortu(x_ard,y_ard,posizioa);
+					printf("Kamera uneko posizioa honakoa da: x ardatza %d eta y ardatza %d \n", x_ard, y_ard);
 				
-				buf[n-2] = 0;	// EOL kendu.
-				// Mezuak dauzkan bi zatiak (fitxategi izena eta tamaina) erauzi.
-				if((sep = strchr(buf,'?')) == NULL)
-				{
-					ustegabekoa(s);
-					continue;
-				}
-				*sep = 0;
-				sep++;
-				strcpy(file_name,buf+4);	// Fitxategi izena lortu.
-				file_size = atoi(sep);		// Fitxategi tamaina lortu.
-				sprintf(file_path,"%s/%s",FILES_PATH,file_name);	// Fitxategiak dauden karpeta eta fitxategiaren izena kateatu.
-				if(file_size > MAX_UPLOAD_SIZE)	// Fitxategi tamainak maximoa gainditzen ez duela egiaztatu.
-				{
-					write(s,"ER8\r\n",5);
-					continue;
-				}
-				if(toki_librea() < file_size + SPACE_MARGIN)	// Mantendu beti toki libre minimo bat diskoan.
-				{
-					write(s,"ER9\r\n",5);
-					continue;
-				}
-				write(s,"OK\r\n",4);
-				egoera = ST_UP;
-				break;
-			case COM_LEFT:
-				if(n > 6 || egoera != ST_UP)		// Egiaztatu esperotako egoeran jaso dela komandoa eta ez dela parametrorik jaso.
-				{
-					ustegabekoa(s);
-					continue;
-				}
-				egoera = ST_MAIN;
-				irakurrita = 0L;
-				fp=fopen(file_path,"w");		// Sortu fitxategi berria diskoan.
-				error = (fp == NULL);
-				while(irakurrita < file_size)
-				{
-					// Jaso fitxategi zati bat.
-					if((n=read(s,buf,MAX_BUF)) <= 0)
+					if(write(sock,posizioa, 10)<0)
 					{
-						close(s);
-						return;
+						perror("Errorea datuak bidaltzean\n");
+						exit(1);
 					}
-					// Ez bada errorerik izan gorde fitxategi zatia diskoan.
-					// Errorerik gertatuz gero segi fitxategi zatiak jasotzen.
-					// Fitxategi osoa jasotzeak alferrikako trafikoa sortzen du, baina aplikazio protokoloak ez du beste aukerarik ematen.
-					if(!error)
+					break;
+				case COM_DOWN:
+					if(egoera != ST_MAIN) // Egiaztatu esperotako egoeran jaso dela komandoa eta ez dela parametrorik jaso.
 					{
-						if(fwrite(buf, 1, n, fp) < n)
-						{
-							fclose(fp);
-							unlink(file_path);
-							error = 1;
-						}
+						ustegabekoa(s);
+						continue;
 					}
-					irakurrita += n;
-				}
-				if(!error)
-				{
-					fclose(fp);
-					write(s,"OK\r\n",4);
-				}
-				else
-					write(s,"ER10\r\n",6);
-				break;
-			case COM_RIGHT:
-				if(egoera != ST_MAIN)		// Egiaztatu esperotako egoeran jaso dela komandoa.
-				{
-					ustegabekoa(s);
-					continue;
-				}
-				// Erabiltzaile anonimoak ez dauka ekintza honetarako baimenik.
-				if(erabiltzaile==0)
-				{
-					write(s,"ER7\r\n",5);
-					continue;
-				}
-				buf[n-2] = 0; // EOL ezabatu.
-				sprintf(file_path,"%s/%s",FILES_PATH,buf+4);	// Fitxategiak dauden karpeta eta fitxategiaren izena kateatu.
-				if(unlink(file_path) < 0)		// Ezabatu fitxategia.
-					write(s,"ER11\r\n",6);
-				else
-					write(s,"OK\r\n",4);
-				break;
-			case COM_PHOTO:
+					buf[n-1] = 0; // EOL ezabatu.
+
+					
+					y_ard = y_ard - 0;
+					
+					stringSortu(x_ard,y_ard,posizioa);
+					printf("Kamera uneko posizioa honakoa da: x ardatza %d eta y ardatza %d \n", x_ard, y_ard);
+				
+					if(write(sock,posizioa, 10)<0)
+					{
+						perror("Errorea datuak bidaltzean\n");
+						exit(1);
+					}
+					break;
+				case COM_LEFT:
+					if(egoera != ST_MAIN) // Egiaztatu esperotako egoeran jaso dela komandoa eta ez dela parametrorik jaso.
+					{
+						ustegabekoa(s);
+						continue;
+					}
+					buf[n-1] = 0; // EOL ezabatu.
+
+					
+					x_ard = x_ard - 0;
+					
+					stringSortu(x_ard,y_ard,posizioa);
+					printf("Kamera uneko posizioa honakoa da: x ardatza %d eta y ardatza %d \n", x_ard, y_ard);
+				
+					if(write(sock,posizioa, 10)<0)
+					{
+						perror("Errorea datuak bidaltzean\n");
+						exit(1);
+					}
+					break;
+				case COM_RIGHT:
+					if(egoera != ST_MAIN) // Egiaztatu esperotako egoeran jaso dela komandoa eta ez dela parametrorik jaso.
+					{
+						ustegabekoa(s);
+						continue;
+					}
+					buf[n-1] = 0; // EOL ezabatu.
+
+					
+					x_ard = x_ard + 0;
+					
+					stringSortu(x_ard,y_ard,posizioa);
+					printf("Kamera uneko posizioa honakoa da: x ardatza %d eta y ardatza %d \n", x_ard, y_ard);
+				
+					if(write(sock,posizioa, 10)<0)
+					{
+						perror("Errorea datuak bidaltzean\n");
+						exit(1);
+					}
+					break;
+			/*case COM_PHOTO:
 				break;
 			case COM_PHOTOP:
 				break;*/
