@@ -1,11 +1,12 @@
 #define MAX_BUF 1024
 #define PORT 6012
-#define FILES_PATH	"files"
+#define FILES_PATH	"argazkiak"
 
 #define ST_INIT	0
 #define ST_AUTH	1
 #define ST_MAIN	2
-#define ST_EXIT 3
+#define ST_PHOTO 3
+#define ST_EXIT 4
 
 #define COM_USER	0
 #define COM_PASS	1

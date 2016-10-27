@@ -19,10 +19,13 @@ int main()
 	int sock, n, erabiltzaile, pasahitza, komando, error, x_ard, y_ard;
 	struct sockaddr_in zerb_helb, bez_helb;
 	socklen_t helb_tam;
-	char buf[MAX_BUF];
-	char posizioa[11];
-	char mugimendua[4];	
+	char buf[MAX_BUF], file_path[MAX_BUF];
+	char posizioa[11], arg[17];
+	char mugimendua[4];
+	char argazki_izena[9];	
 	char * sep;
+	struct stat file_info;
+
 	
 
 	x_ard = 90;
@@ -155,6 +158,11 @@ int main()
 					break;
 
 				case COM_POSITION:
+					if(n > 9)	// Egiaztatu ez dela parametrorik jaso.
+					{
+						ustegabekoa(sock);
+						continue;
+					}
 					if(egoera != ST_MAIN)	// Egiaztatu esperotako egoeran jaso dela komandoa eta ez dela parametrorik jaso.
 					{
 						ustegabekoa(sock);
@@ -172,6 +180,11 @@ int main()
 				
 					break;
 				case COM_RESET:
+					if(n > 6)	// Egiaztatu ez dela parametrorik jaso.
+					{
+						ustegabekoa(sock);
+						continue;
+					}
 					if(egoera != ST_MAIN)		// Egiaztatu esperotako egoeran jaso dela komandoa.
 					{
 						ustegabekoa(sock);
@@ -305,26 +318,75 @@ int main()
 						exit(1);
 					}
 					break;
-			/*case COM_PHOTO:
-				break;
-			case COM_PHOTOP:
-				break;*/
-			case COM_LOGOUT:
-				if(n > 7)	// Egiaztatu ez dela parametrorik jaso.
-				{
-					ustegabekoa(sock);
-					continue;
-				}
-				if((egoera==ST_INIT)||(egoera==ST_AUTH))
-				{
-					printf("Ez zaude logeatuta. Sartu erabiltzailea:\n");
-					write(sock,"ERROR$4",7);
-					egoera = ST_INIT;
-				}else{
-					printf("Log out-a egoki burutu da. Erabiltzailea sartu:\n");
-					write(sock,"OK",2);
-					egoera = ST_INIT;
-				}
+				case COM_PHOTO:
+					if(n > 6)	// Egiaztatu ez dela parametrorik jaso.
+					{
+						ustegabekoa(sock);
+						continue;
+					}
+					if(egoera != ST_MAIN) // Egiaztatu esperotako egoeran jaso dela komandoa eta ez dela parametrorik jaso.
+					{
+						ustegabekoa(sock);
+						continue;
+					}
+					buf[n-1] = 0;
+					if(x_ard==90 || y_ard==90)
+						strcpy(argazki_izena,"argazki0");
+					if(x_ard<90 && y_ard<90)
+						strcpy(argazki_izena,"argazki1");
+					if(x_ard>90 && y_ard<90)
+						strcpy(argazki_izena,"argazki2");
+					if(x_ard<90 && y_ard>90)
+						strcpy(argazki_izena,"argazki3");
+					if(x_ard>90 && y_ard>90)
+						strcpy(argazki_izena,"argazki4");
+				
+					// Fitxategiak dauden karpeta eta fitxategiaren izena kateatu.
+					sprintf(file_path,"%s/%s",FILES_PATH,argazki_izena);
+					// Lortu fitxategiari buruzko informazioa.
+					if(stat(file_path, &file_info) < 0)	
+					{
+						ustegabekoa(sock);
+						continue;
+					}
+					else
+					{
+						sprintf(arg,"OK$%s?%ld",argazki_izena,file_info.st_size);
+						printf("bidali nahi dugun argumentu izena: %s \n", arg);
+						if(write(sock,arg, 17)<0) // 3+9+1+4=17
+						{
+							perror("Errorea datuak bidaltzean\n");
+							exit(1);
+						}
+						egoera=ST_PHOTO;
+						printf("EGOERA: %d \n", egoera);
+					}
+					break;
+				case COM_PHOTOP:
+					if(egoera != ST_PHOTO) // Egiaztatu esperotako egoeran jaso dela komandoa eta ez dela parametrorik jaso.
+					{
+						ustegabekoa(sock);
+						continue;
+					}
+					egoera = ST_MAIN;
+					break;
+				case COM_LOGOUT:
+					if(n > 7)	// Egiaztatu ez dela parametrorik jaso.
+					{
+						ustegabekoa(sock);
+						continue;
+					}
+					if((egoera==ST_INIT)||(egoera==ST_AUTH))
+					{
+						printf("Ez zaude logeatuta. Sartu erabiltzailea:\n");
+						write(sock,"ERROR$4",7);
+						egoera = ST_INIT;
+					}else{
+						printf("Log out-a egoki burutu da. Erabiltzailea sartu:\n");
+						write(sock,"OK",2);
+						egoera = ST_INIT;
+					}
+					break;
 			}
 		}while((n=read(sock, buf, MAX_BUF)) > 0);
 			
@@ -385,7 +447,7 @@ void ustegabekoa(int s)
 		egoera = ST_INIT;
 	}
 	else {
-		printf("Errore bat egon da");
+		printf("Errore bat egon da\n");
 		exit(1);
 	}
 }
