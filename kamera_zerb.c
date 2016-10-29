@@ -102,8 +102,6 @@ int main()
 					// Baliozko erabiltzaile bat den egiaztatu.
 					if((erabiltzaile = bilatu_string(buf+5, erab_zer)) < 0)
 					{
-							
-						//if(sendto(sock, "ERROR$1", 7, 0, (struct sockaddr *) &bez_helb, helb_tam) < 0)
 						printf("Ez dago erabiltzaile hori gure listan.\n");
 						if(write(sock,"ERROR$1",7)<0)
 						{
@@ -113,8 +111,6 @@ int main()
 					}
 					else
 					{
-						
-						//if(sendto(sock, "OK", 2, 0, (struct sockaddr *) &bez_helb, helb_tam) < 0)
 						printf("Erabiltzaile hori gure listan dago.\n");
 						if(write(sock,"OK",2)<0)
 						{
@@ -133,7 +129,6 @@ int main()
 					}
 					buf[n-1] = 0;	// EOL ezabatu.
 					// Pasahitza zuzena dela egiaztatu.
-					//if(!strcmp(pass_zer[erabiltzaile], buf+5))
 					pasahitza = bilatu_string(buf+5, pass_zer);
 					if(pasahitza==erabiltzaile)
 					{
@@ -161,10 +156,10 @@ int main()
 				case COM_POSITION:
 					if(n > 9)	// Egiaztatu ez dela parametrorik jaso.
 					{
-						ustegabekoa(sock);
+						bestelakoAkatsa(sock);
 						continue;
 					}
-					if(egoera != ST_MAIN)	// Egiaztatu esperotako egoeran jaso dela komandoa eta ez dela parametrorik jaso.
+					if(egoera != ST_MAIN)	// Egiaztatu esperotako egoeran jaso dela komandoa
 					{
 						ustegabekoa(sock);
 						continue;
@@ -183,7 +178,7 @@ int main()
 				case COM_RESET:
 					if(n > 6)	// Egiaztatu ez dela parametrorik jaso.
 					{
-						ustegabekoa(sock);
+						bestelakoAkatsa(sock);
 						continue;
 					}
 					if(egoera != ST_MAIN)		// Egiaztatu esperotako egoeran jaso dela komandoa.
@@ -220,10 +215,9 @@ int main()
 					sprintf(mugimendua,"%s",buf+3);
 
 					printf("mugimendua honakoa da: %s gradu goruntz\n", mugimendua);
-					
-					//int y = atoi(mugimendua);
+			
+					//ardatzen posizioa eguneratu
 					y_ard = y_ard + atoi(mugimendua);
-
 					y_ard=ardatzaFrogatu(y_ard);
 					
 					stringSortu(x_ard,y_ard,posizioa);
@@ -250,7 +244,7 @@ int main()
 					sprintf(mugimendua,"%s",buf+5);
 					printf("mugimendua honakoa da: %s gradu behera\n", mugimendua);
 					
-					//int y = atoi(mugimendua);
+					//ardatzen posizioa eguneratu
 					y_ard = y_ard - atoi(mugimendua);
 					y_ard=ardatzaFrogatu(y_ard);
 					
@@ -277,7 +271,7 @@ int main()
 					sprintf(mugimendua,"%s",buf+5);
 					printf("mugimendua honakoa da: %s  gradu ezkerretara\n", mugimendua);
 					
-					//int x = atoi(mugimendua);
+					//ardatzen posizioa eguneratu
 					x_ard = x_ard - atoi(mugimendua);
 					x_ard=ardatzaFrogatu(x_ard);
 					
@@ -304,7 +298,7 @@ int main()
 					sprintf(mugimendua,"%s",buf+6);
 					printf("mugimendua honakoa da: %s  gradu eskubitara\n", mugimendua);
 					
-					//int x = atoi(mugimendua);
+					//ardatzen posizioa eguneratu
 					x_ard = x_ard + atoi(mugimendua);
 					x_ard=ardatzaFrogatu(x_ard);
 					
@@ -322,7 +316,7 @@ int main()
 				case COM_PHOTO:
 					if(n > 6)	// Egiaztatu ez dela parametrorik jaso.
 					{
-						ustegabekoa(sock);
+						bestelakoAkatsa(sock);
 						continue;
 					}
 					if(egoera != ST_MAIN) // Egiaztatu esperotako egoeran jaso dela komandoa eta ez dela parametrorik jaso.
@@ -330,7 +324,9 @@ int main()
 						ustegabekoa(sock);
 						continue;
 					}
-					buf[n-1] = 0;
+					buf[n-1] = 0; //EOL ezabatu
+		
+					//posizioaren arabera argazki bat esleitu 
 					if(x_ard==90 || y_ard==90)
 						strcpy(argazki_izena,"argazki0");
 					if(x_ard<90 && y_ard<90)
@@ -347,7 +343,7 @@ int main()
 					// Lortu fitxategiari buruzko informazioa.
 					if(stat(file_path, &file_info) < 0)	
 					{
-						ustegabekoa(sock);
+						argazkiAkatsa(sock);
 						continue;
 					}
 					else
@@ -368,50 +364,40 @@ int main()
 						ustegabekoa(sock);
 						continue;
 					}
-					//printf("Fotop barruan zaude\n");
 					if((fp=fopen(file_path,"r")) == NULL)
 					{
-						ustegabekoa(sock);
+						argazkiAkatsa(sock);
 					}
 					else
 					{
-					//Hau zergatik??
 					// Fitxategiaren lehenengo zatia irakurri eta errore bat gertatu bada bidali errore kodea.
 					if((n=fread(buf,1,MAX_BUF,fp))<MAX_BUF && ferror(fp) != 0)
 					{
-						ustegabekoa(sock);
+						argazkiAkatsa(sock);
 					}
 					else
-					{
-						//write(sock,"OK",4);
-						// Bidali fitxategiaren zatiak.
-						do
-						{
-							write(sock,buf,MAX_BUF);
-						} while((n=fread(buf,1,MAX_BUF,fp)) == MAX_BUF);
-						
+					{	//fitxategia bidali
+						write(sock,buf,file_info.st_size);
 						if(ferror(fp) != 0)
 						{
 							close(sock);
-							//hau zergatik??
-							return;
+							exit(1);	
 						}
-						else if(n>0)
-							write(sock,buf,n);	// Bidali azkeneko zatia.
 					}
+					egoera = ST_MAIN;
 					fclose(fp);
 					}
 					break;
 				case COM_LOGOUT:
 					if(n > 7)	// Egiaztatu ez dela parametrorik jaso.
 					{
-						ustegabekoa(sock);
+						bestelakoAkatsa(sock);
 						continue;
 					}
 					if((egoera==ST_INIT)||(egoera==ST_AUTH))
 					{
 						printf("Ez zaude logeatuta. Sartu erabiltzailea:\n");
-						write(sock,"ERROR$4",7);
+						write(sock,"ERROR$3",7);
 						egoera = ST_INIT;
 					}else{
 						printf("Log out-a egoki burutu da. Erabiltzailea sartu:\n");
@@ -468,27 +454,14 @@ int bilatu_substring(char *string, char **string_zerr)
 	return -1;
 }
 
-/*
-* Ustekabeko zerbait gertatzen denean egin beharrekoa: dagokion errorea bidali bezeroari eta egoera eguneratu.
-*/
-void ustegabekoa(int s)
-{
-	write(s,"ERROR$8",7);
-	if(egoera == ST_AUTH)
-	{
-		egoera = ST_INIT;
-	}
-	else {
-		printf("Errore bat egon da\n");
-		exit(1);
-	}
-}
 
+//stringa sortzeko funtzio laguntzailea
 void stringSortu(int x, int y, char* pos)
 {
 	sprintf(pos,"OK$%03d?%03d",x,y);
 }
 
+//ardatzen limiteak frogatzen dituen funtzio laguntzailea
 int ardatzaFrogatu(int y)
 {
 	if (y < 0)
@@ -500,6 +473,44 @@ int ardatzaFrogatu(int y)
 	return y;
 }
 
+/*
+ERROREEN TRATAMENTUA
+*/
+//argazkia bidaltzeko prozesuan akatsik gertatzen bada ERROR$4 bidaliko da eta programa bukatu
+void argazkiAkatsa(int s)
+{
+	write(s,"ERROR$4",7);
+	printf("Argazkia bidaltzeko prozesuan akats bat egon da.\n");
+	exit(1);
+}
+
+//ustekabeko komando bat jasotzen bada, ERROR$5 pantailaratuko da
+void ustegabekoa(int s)
+{
+	write(s,"ERROR$5",7);
+	if(egoera == ST_AUTH)
+	{
+		egoera = ST_INIT;
+	}
+	else {
+		printf("Ustekabeko komando bat jaso da.\n");
+		exit(1);
+	}
+}
+
+//beste motako akatsik gertatzen bada, ERROR$6 pantailaratuko da
+void bestelakoAkatsa(int s)
+{
+	write(s,"ERROR$6",7);
+	if(egoera == ST_AUTH)
+	{
+		egoera = ST_INIT;
+	}
+	else {
+		printf("Definitu gabeko errore bat egon da.\n");
+		exit(1);
+	}
+}
 
 
 
