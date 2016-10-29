@@ -53,10 +53,6 @@ int main()
 		exit(1);
 	}
 	
-
-	//prozesu umeak hiltzeko modu egokian. Aurrerago begiratu, konkurrentea egiterakoan
-	//signal(SIGCHLD, SIG_IGN);
-	
 	// Zehaztu uneko egoera bezala hasierako egoera.
 	egoera = ST_INIT;
 	
@@ -128,7 +124,7 @@ int main()
 						continue;
 					}
 					buf[n-1] = 0;	// EOL ezabatu.
-					// Pasahitza zuzena dela egiaztatu.
+					// Pasahitza zuzena dela egiaztatu eta behar den mezua pantailaratu.
 					pasahitza = bilatu_string(buf+5, pass_zer);
 					if(pasahitza==erabiltzaile)
 					{
@@ -164,6 +160,7 @@ int main()
 						ustegabekoa(sock);
 						continue;
 					}
+					//Posizioa stringera pasa eta bidali
 					stringSortu(x_ard,y_ard,posizioa);
 					printf("Posizioa honakoa da:.\n");
 					printf("x ardatza: %d\n", x_ard);
@@ -187,7 +184,7 @@ int main()
 						continue;
 					}
 					buf[n-1] = 0; // EOL ezabatu.
-
+					//ardatzen posizioa jatorrira bueltatu
 					x_ard = 90;
 					y_ard = 90;
 
@@ -394,6 +391,7 @@ int main()
 						bestelakoAkatsa(sock);
 						continue;
 					}
+					//egoera egokia dela konprobatu eta 
 					if((egoera==ST_INIT)||(egoera==ST_AUTH))
 					{
 						printf("Ez zaude logeatuta. Sartu erabiltzailea:\n");
@@ -461,6 +459,7 @@ void stringSortu(int x, int y, char* pos)
 	sprintf(pos,"OK$%03d?%03d",x,y);
 }
 
+/*FUNTZIONALITATE LOGIKOA*/
 //ardatzen limiteak frogatzen dituen funtzio laguntzailea
 int ardatzaFrogatu(int y)
 {
