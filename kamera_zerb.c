@@ -7,7 +7,6 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <sys/wait.h>
-//#include <signal.h>
 #include <sys/stat.h>
 #include <dirent.h>
 #include <sys/statvfs.h>
@@ -68,7 +67,7 @@ int main()
 			perror("Errorea datuak jasotzean");
 			exit(1);
 		}
-
+		
 		//dena ondo joan bada jarraitu, bestela whiletik atera eta prozesua egoki amaitu
 		if(n==0)
 			continue; 
@@ -90,7 +89,10 @@ int main()
 					exit(1);
 				}
 			}
+			//hasieraketa balioak eman
 			hasieraketa=1;
+			log_out_egokia = 0;
+
 			// Aztertu jasotako komandoa ezaguna den ala ez.
 			if((komando=bilatu_substring(buf,KOMANDOAK)) < 0)
 			{
@@ -413,7 +415,8 @@ int main()
 						printf("Log out-a egoki burutu da.\n");
 						write(sock,"OK",2);
 						egoera = ST_INIT;
-						log_out_egokia==1;
+						log_out_egokia=1;
+						hasieraketa=0;
 					}
 					break;
 			}
