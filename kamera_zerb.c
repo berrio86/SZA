@@ -25,7 +25,6 @@ int main()
 	char argazki_izena[9];	
 	char * sep;
 	struct stat file_info;
-	struct timeval timer;
 	FILE *fp;
 
 	
@@ -81,7 +80,6 @@ int main()
 
 		do
 		{
-			
 			if(egoera !=ST_INIT || hasieraketa!=0 ){
 				if((n=read(sock, buf, MAX_BUF)) < 0)
 				{
