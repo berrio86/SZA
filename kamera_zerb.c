@@ -7,16 +7,17 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <sys/wait.h>
-#include <signal.h>
+//#include <signal.h>
 #include <sys/stat.h>
 #include <dirent.h>
 #include <sys/statvfs.h>
+
 
 #include "kamera_zerb.h"
 
 int main()
 {
-	int sock, n, erabiltzaile, pasahitza, komando, error, x_ard, y_ard, log_out_egokia;
+	int sock, n, erabiltzaile, pasahitza, komando, error, x_ard, y_ard, log_out_egokia, hasieraketa;
 	struct sockaddr_in zerb_helb, bez_helb;
 	socklen_t helb_tam;
 	char buf[MAX_BUF], file_path[MAX_BUF];
@@ -25,10 +26,12 @@ int main()
 	char argazki_izena[9];	
 	char * sep;
 	struct stat file_info;
+	struct timeval timer;
 	FILE *fp;
 
 	
 	log_out_egokia = 0;
+	hasieraketa=0;
 	x_ard = 90;
 	y_ard = 90;
 	
@@ -56,6 +59,7 @@ int main()
 	// Zehaztu uneko egoera bezala hasierako egoera.
 	egoera = ST_INIT;
 	
+	
 	while(1)
 	{
 		helb_tam = sizeof(bez_helb);
@@ -78,6 +82,15 @@ int main()
 
 		do
 		{
+			
+			if(egoera !=ST_INIT || hasieraketa!=0 ){
+				if((n=read(sock, buf, MAX_BUF)) < 0)
+				{
+					perror("Errorea datuak jasotzean");
+					exit(1);
+				}
+			}
+			hasieraketa=1;
 			// Aztertu jasotako komandoa ezaguna den ala ez.
 			if((komando=bilatu_substring(buf,KOMANDOAK)) < 0)
 			{
@@ -405,8 +418,9 @@ int main()
 					break;
 			}
 		
-		}while(log_out_egokia==1);
+		}while(log_out_egokia==0);
 		
+		//socket konektatua reseteatu
 		memset(&zerb_helb, 0, sizeof(zerb_helb));
 		bez_helb.sin_family = AF_UNSPEC;
 		connect(sock,(struct sockaddr *) &bez_helb, helb_tam);

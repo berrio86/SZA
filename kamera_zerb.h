@@ -1,5 +1,6 @@
 #define MAX_BUF 1024
 #define PORT 6012
+#define TIMER 30
 #define FILES_PATH	"argazkiak"
 
 #define ST_INIT	0
