@@ -16,7 +16,7 @@
 
 int main()
 {
-	int sock, n, erabiltzaile, pasahitza, komando, error, x_ard, y_ard;
+	int sock, n, erabiltzaile, pasahitza, komando, error, x_ard, y_ard, log_out_egokia;
 	struct sockaddr_in zerb_helb, bez_helb;
 	socklen_t helb_tam;
 	char buf[MAX_BUF], file_path[MAX_BUF];
@@ -28,7 +28,7 @@ int main()
 	FILE *fp;
 
 	
-
+	log_out_egokia = 0;
 	x_ard = 90;
 	y_ard = 90;
 	
@@ -124,7 +124,7 @@ int main()
 						continue;
 					}
 					buf[n-1] = 0;	// EOL ezabatu.
-					// Pasahitza zuzena dela egiaztatu eta behar den mezua pantailaratu.
+					// Pasahitza zuzena dela egiaztatu.
 					pasahitza = bilatu_string(buf+5, pass_zer);
 					if(pasahitza==erabiltzaile)
 					{
@@ -160,7 +160,6 @@ int main()
 						ustegabekoa(sock);
 						continue;
 					}
-					//Posizioa stringera pasa eta bidali
 					stringSortu(x_ard,y_ard,posizioa);
 					printf("Posizioa honakoa da:.\n");
 					printf("x ardatza: %d\n", x_ard);
@@ -205,10 +204,8 @@ int main()
 						ustegabekoa(sock);
 						continue;
 					}
-					buf[n-1] = 0; // EOL ezabatu.
+					buf[n] = 0; // EOL ezabatu.					
 					
-					
-
 					sprintf(mugimendua,"%s",buf+3);
 
 					printf("mugimendua honakoa da: %s gradu goruntz\n", mugimendua);
@@ -234,9 +231,8 @@ int main()
 						ustegabekoa(sock);
 						continue;
 					}
-					buf[n-1] = 0; // EOL ezabatu.
 
-					
+					buf[n] = 0; // EOL ezabatu.		
 					
 					sprintf(mugimendua,"%s",buf+5);
 					printf("mugimendua honakoa da: %s gradu behera\n", mugimendua);
@@ -263,7 +259,7 @@ int main()
 						ustegabekoa(sock);
 						continue;
 					}
-					buf[n-1] = 0; // EOL ezabatu.
+					buf[n] = 0; // EOL ezabatu.
 
 					sprintf(mugimendua,"%s",buf+5);
 					printf("mugimendua honakoa da: %s  gradu ezkerretara\n", mugimendua);
@@ -289,7 +285,7 @@ int main()
 						ustegabekoa(sock);
 						continue;
 					}
-					buf[n-1] = 0; // EOL ezabatu.
+					buf[n] = 0; // EOL ezabatu.
 
 					
 					sprintf(mugimendua,"%s",buf+6);
@@ -346,7 +342,7 @@ int main()
 					else
 					{
 						sprintf(arg,"OK$%s?%ld",argazki_izena,file_info.st_size);
-						printf("bidali nahi dugun argumentu izena: %s \n", arg);
+						printf("Bidali nahi dugun argumentu izena: %s \n", arg);
 						if(write(sock,arg, 17)<0) // 3+9+1+4=17
 						{
 							perror("Errorea datuak bidaltzean\n");
@@ -373,13 +369,16 @@ int main()
 						argazkiAkatsa(sock);
 					}
 					else
-					{	//fitxategia bidali
+					{
+						//fitxategia bidali
 						write(sock,buf,file_info.st_size);
 						if(ferror(fp) != 0)
 						{
 							close(sock);
-							exit(1);	
+							exit(1);
+							
 						}
+						
 					}
 					egoera = ST_MAIN;
 					fclose(fp);
@@ -391,29 +390,27 @@ int main()
 						bestelakoAkatsa(sock);
 						continue;
 					}
-					//egoera egokia dela konprobatu eta 
+					//egoera egokia dela konprobatu eta
 					if((egoera==ST_INIT)||(egoera==ST_AUTH))
 					{
-						printf("Ez zaude logeatuta. Sartu erabiltzailea:\n");
+						printf("Ez zaude logeatuta.\n");
 						write(sock,"ERROR$3",7);
 						egoera = ST_INIT;
 					}else{
-						printf("Log out-a egoki burutu da. Erabiltzailea sartu:\n");
+						printf("Log out-a egoki burutu da.\n");
 						write(sock,"OK",2);
 						egoera = ST_INIT;
+						log_out_egokia==1;
 					}
 					break;
 			}
-		}while((n=read(sock, buf, MAX_BUF)) > 0);
-			
-		close(sock);
-		if(n < 0)
-		{
-			perror("Errorea mezua jasotzean");
-			exit(1);
-		}
-		exit(0);
 		
+		}while(log_out_egokia==1);
+		
+		memset(&zerb_helb, 0, sizeof(zerb_helb));
+		bez_helb.sin_family = AF_UNSPEC;
+		connect(sock,(struct sockaddr *) &bez_helb, helb_tam);
+
 	}
 }
 
@@ -458,6 +455,7 @@ void stringSortu(int x, int y, char* pos)
 {
 	sprintf(pos,"OK$%03d?%03d",x,y);
 }
+
 
 /*FUNTZIONALITATE LOGIKOA*/
 //ardatzen limiteak frogatzen dituen funtzio laguntzailea
